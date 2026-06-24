@@ -1,0 +1,9 @@
+packages: .
+
+-- If "collect2: cannot find 'ld'" persists, uncomment one of these:
+--
+-- package *
+--   ghc-options: -pgml ld.bfd
+--
+-- package *
+--   ghc-options: -pgml gcc

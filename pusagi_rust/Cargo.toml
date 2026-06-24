@@ -1,0 +1,17 @@
+[package]
+name = "pusagi_rust"
+version = "0.1.0"
+edition = "2021"
+
+[[bin]]
+name = "pusagi"
+path = "src/main.rs"
+
+[dependencies]
+gtk4 = "0.11"
+cairo = { version = "0.22", package = "cairo-rs", features = ["use_glib"] }
+pango = "0.22"
+pangocairo = "0.22"
+glib = "0.22"
+
+[build-dependencies]
