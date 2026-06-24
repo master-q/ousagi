@@ -1,0 +1,22 @@
+{
+  "image": "cuihtlauac/ocaml-devcontainer:latest",
+  "features": {
+    "ghcr.io/anthropics/devcontainer-features/claude-code:1.0": {}
+  },
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "ocamllabs.ocaml-platform",
+        "ms-vscode.cpptools-extension-pack",
+        "ms-vscode.makefile-tools"
+      ]
+    }
+  },
+  "mounts": [
+    "source=claude-code-config,target=/home/vscode/.claude,type=volume"
+  ],
+  "postCreateCommand": "sudo chown -R vscode:vscode /home/vscode/.claude && sudo apt-get update && sudo apt-get install -y cmake llvm-19-dev libzstd-dev lld-19 qemu-system-arm && opam update && opam install -y ppx_deriving llvm",
+  "containerEnv": {
+    "OPAMYES": "true"
+  }
+}
