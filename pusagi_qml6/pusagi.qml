@@ -8,11 +8,13 @@ Window {
     title: "Pusagi (QML)"
     color: "black"
 
-    // ── Timer state ───────────────────────────────────────
-    property int    currentPage: 0
-    property double elapsedSec:  0.0
-    property bool   presRunning: false
-    property var    lastTickMs:  0
+    // ── State ─────────────────────────────────────────────
+    property int    currentPage:        0
+    property double elapsedSec:         0.0
+    property bool   presRunning:        false
+    property var    lastTickMs:         0
+    property real   displayedTimerProg: 0.0
+    property real   displayedPageProg:  0.0
 
     function toggleTimer() {
         if (presRunning) {
@@ -24,20 +26,26 @@ Window {
         }
     }
 
+    // Single 16ms tick: updates elapsed time + lerps both progress markers.
+    // Always running so the rabbit animates even while the timer is paused.
     Timer {
         interval: 16
-        running: root.presRunning
+        running: true
         repeat: true
         onTriggered: {
-            var now = Date.now()
-            root.elapsedSec += (now - root.lastTickMs) / 1000.0
-            root.lastTickMs = now
+            if (root.presRunning) {
+                var now = Date.now()
+                root.elapsedSec += (now - root.lastTickMs) / 1000.0
+                root.lastTickMs = now
+            }
+            var tp = Math.min(root.elapsedSec / totalTimeSec, 1.0)
+            var pp = pageCount > 1 ? root.currentPage / (pageCount - 1) : 0.0
+            root.displayedTimerProg += (tp - root.displayedTimerProg) * 0.1
+            root.displayedPageProg  += (pp - root.displayedPageProg)  * 0.1
         }
     }
 
     // ── PDF rendering ─────────────────────────────────────
-    // C++ PdfImageProvider renders each page at the window size,
-    // preserving aspect ratio with a black background.
     Image {
         anchors.fill: parent
         source: "image://pdf/" + root.currentPage
@@ -55,19 +63,13 @@ Window {
         height: 32
         color: "#4D000000"
 
-        readonly property real timerProg:
-            Math.min(root.elapsedSec / totalTimeSec, 1.0)
-        readonly property real pageProg:
-            pageCount > 1 ? root.currentPage / (pageCount - 1) : 0.0
-
         Text {
             text: root.presRunning ? "🐢" : "🐢💤"
             font.family: "Noto Color Emoji"
             font.pointSize: 18
             color: "#33CC33"
             y: (bar.height - height) / 2
-            x: bar.timerProg * Math.max(bar.width - width, 0)
-            Behavior on x { SmoothedAnimation { velocity: 800 } }
+            x: root.displayedTimerProg * Math.max(bar.width - width, 0)
         }
 
         Text {
@@ -76,13 +78,11 @@ Window {
             font.pointSize: 18
             color: "#E64C4C"
             y: (bar.height - height) / 2
-            x: bar.pageProg * Math.max(bar.width - width, 0)
-            Behavior on x { SmoothedAnimation { velocity: 800 } }
+            x: root.displayedPageProg * Math.max(bar.width - width, 0)
         }
     }
 
     // ── Keyboard shortcuts ────────────────────────────────
-    // Shortcut fires at window level regardless of which item has focus.
     Shortcut { sequence: "Escape"; onActivated: Qt.quit() }
     Shortcut { sequence: "Space";  onActivated: root.toggleTimer() }
     Shortcut {
