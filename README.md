@@ -11,13 +11,14 @@ duration.
 
 ## Implementations
 
-The same application is implemented in five languages as a comparison study:
+The same application is implemented in six languages as a comparison study:
 
 | Directory | Language / Toolkit | Source lines |
 |---|---|---|
 | `pusagi_vala/` | Vala + GTK4 + Poppler | 317 |
 | `pusagi_ocaml/` | OCaml + GTK3 + Poppler (C stubs) | 306 (98 C + 208 ML) |
 | `pusagi_qt6/` | C++ + Qt6 (QtPdf built-in) | 218 |
+| `pusagi_qml6/` | C++ + QML + Qt6 (QtPdf built-in) | 221 (123 C++ + 98 QML) |
 | `pusagi_rust/` | Rust + GTK4 + Poppler (inline FFI) | 496 |
 | `pusagi_haskell/` | Haskell + GTK3 + gi-poppler | 334 |
 
@@ -52,6 +53,12 @@ opam install dune lablgtk3 cairo2
 sudo apt-get install cmake qt6-base-dev libqt6pdf6-dev fonts-noto-color-emoji
 ```
 
+### QML / Qt6 (`pusagi_qml6/`)
+
+```sh
+sudo apt-get install cmake qt6-base-dev qt6-declarative-dev libqt6pdf6-dev fonts-noto-color-emoji
+```
+
 ### Rust (`pusagi_rust/`)
 
 ```sh
@@ -84,6 +91,7 @@ Or build a single implementation:
 make pusagi_vala
 make pusagi_ocaml
 make pusagi_qt6
+make pusagi_qml6
 make pusagi_rust
 make pusagi_haskell
 ```
