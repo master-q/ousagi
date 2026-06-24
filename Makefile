@@ -1,4 +1,4 @@
-SUBDIRS = pusagi_vala pusagi_ocaml pusagi_qt6 pusagi_rust pusagi_haskell
+SUBDIRS = pusagi_vala pusagi_ocaml pusagi_qt6 pusagi_qml6 pusagi_rust pusagi_haskell
 
 .PHONY: all clean $(SUBDIRS) $(addprefix clean-,$(SUBDIRS))
 
@@ -11,6 +11,9 @@ pusagi_ocaml:
 	$(MAKE) -C $@
 
 pusagi_qt6:
+	$(MAKE) -C $@
+
+pusagi_qml6:
 	$(MAKE) -C $@
 
 pusagi_rust:
@@ -29,6 +32,9 @@ clean-pusagi_ocaml:
 
 clean-pusagi_qt6:
 	$(MAKE) -C pusagi_qt6 clean
+
+clean-pusagi_qml6:
+	$(MAKE) -C pusagi_qml6 clean
 
 clean-pusagi_rust:
 	$(MAKE) -C pusagi_rust clean
