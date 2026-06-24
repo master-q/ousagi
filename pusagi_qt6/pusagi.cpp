@@ -29,6 +29,10 @@ class PusagiWidget : public QWidget {
     double m_dispTimerProgress = 0.0;
     double m_dispPageProgress  = 0.0;
 
+    QImage m_cachedPage;
+    int    m_cachedPageIndex = -1;
+    QSize  m_cachedSize;
+
 public:
     PusagiWidget(const QString &path, double totalTimeSec, QWidget *parent = nullptr)
         : QWidget(parent), m_totalTimeSec(totalTimeSec)
@@ -113,11 +117,15 @@ private:
             static_cast<int>(pointSize.width()  * scale),
             static_cast<int>(pointSize.height() * scale)
         );
-        QImage img = m_doc.render(m_currentPage, renderSize);
+        if (m_cachedPageIndex != m_currentPage || m_cachedSize != renderSize) {
+            m_cachedPage      = m_doc.render(m_currentPage, renderSize);
+            m_cachedPageIndex = m_currentPage;
+            m_cachedSize      = renderSize;
+        }
         int ox = (w - renderSize.width())  / 2;
         int oy = (h - renderSize.height()) / 2;
         p.fillRect(rect(), Qt::black);
-        p.drawImage(ox, oy, img);
+        p.drawImage(ox, oy, m_cachedPage);
     }
 
     void drawOverlay(QPainter &p) {
