@@ -19,9 +19,11 @@ endif
 
 build:
 	cabal build
+	cp $$(cabal list-bin pusagi) pusagi
 
 clean:
 	cabal clean
+	rm -f pusagi
 
 run:
 	cabal run pusagi -- $(PDF)
