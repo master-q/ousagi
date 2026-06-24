@@ -18,7 +18,21 @@
       "Bash(dpkg *)",
       "Bash(cat *)",
       "Bash(awk *)",
-      "Bash(apt-cache *)"
+      "Bash(apt-cache *)",
+      "Bash(pkg-config *)",
+      "Bash(sudo apt-get install -y *)",
+      "Bash(ocamlfind *)",
+      "Bash(eval $(opam env) && ocamlfind *)",
+      "Bash(eval $(opam env) && opam *)",
+      "Bash(eval $(opam env) && dune *)",
+      "Bash(find /workspaces/ousagi *)",
+      "Bash(find /home/vscode/.opam *)",
+      "Bash(which *)",
+      "Bash(chmod +x /workspaces/ousagi/pusagi/gen_flags.sh)",
+      "Bash(/workspaces/ousagi/pusagi/gen_flags.sh cflags *)",
+      "Bash(/workspaces/ousagi/pusagi/gen_flags.sh lflags *)",
+      "Skill(update-config)",
+      "Skill(update-config:*)"
     ],
     "additionalDirectories": [
       "/tmp",
