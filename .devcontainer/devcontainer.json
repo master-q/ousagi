@@ -1,7 +1,8 @@
 {
   "image": "cuihtlauac/ocaml-devcontainer:latest",
   "features": {
-    "ghcr.io/anthropics/devcontainer-features/claude-code:1.0": {}
+    "ghcr.io/anthropics/devcontainer-features/claude-code:1.0": {},
+    "ghcr.io/devcontainers/features/rust:1": {}
   },
   "customizations": {
     "vscode": {
@@ -15,7 +16,7 @@
   "mounts": [
     "source=claude-code-config,target=/home/vscode/.claude,type=volume"
   ],
-  "postCreateCommand": "sudo chown -R vscode:vscode /home/vscode/.claude && sudo apt-get update && sudo apt-get install -y cmake llvm-19-dev libzstd-dev lld-19 qemu-system-arm && opam update && opam install -y ppx_deriving llvm",
+  "postCreateCommand": "sudo chown -R vscode:vscode /home/vscode/.claude && sudo apt-get update && sudo apt-get install -y cmake valac libgtk-4-dev libgtk-3-dev libpoppler-glib-dev pkg-config qt6-base-dev qt6-declarative-dev qt6-pdf-dev fonts-noto-color-emoji && opam update && opam install -y lablgtk3 cairo2",
   "containerEnv": {
     "OPAMYES": "true"
   }
