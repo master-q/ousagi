@@ -1,14 +1,17 @@
 SUBDIRS = pusagi_vala pusagi_ocaml pusagi_qt6 pusagi_qml6 pusagi_rust pusagi_haskell
 
-.PHONY: all clean $(SUBDIRS) $(addprefix clean-,$(SUBDIRS))
+.PHONY: all clean puppler-opam $(SUBDIRS) $(addprefix clean-,$(SUBDIRS))
 
 all: $(SUBDIRS)
 
 pusagi_vala:
 	$(MAKE) -C $@
 
-pusagi_ocaml:
+pusagi_ocaml: puppler-opam
 	$(MAKE) -C $@
+
+puppler-opam:
+	eval $$(opam env) && opam install ./puppler --yes
 
 pusagi_qt6:
 	$(MAKE) -C $@

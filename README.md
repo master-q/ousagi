@@ -16,7 +16,8 @@ The same application is implemented in six languages as a comparison study:
 | Directory | Language / Toolkit | Source lines |
 |---|---|---|
 | `pusagi_vala/` | Vala + GTK4 + Poppler | 317 |
-| `pusagi_ocaml/` | OCaml + GTK3 + Poppler (C stubs) | 306 (98 C + 208 ML) |
+| `pusagi_ocaml/` | OCaml + GTK3 + Poppler via local `puppler` package | 193 |
+| `puppler/` | Local OCaml Poppler binding package for `pusagi_ocaml/` | 121 (96 C + 25 ML) |
 | `pusagi_qt6/` | C++ + Qt6 (QtPdf built-in) | 218 |
 | `pusagi_qml6/` | C++ + QML + Qt6 (QtPdf built-in) | 221 (123 C++ + 98 QML) |
 | `pusagi_rust/` | Rust + GTK4 + Poppler (inline FFI) | 496 |
@@ -45,6 +46,16 @@ sudo apt-get install valac libgtk-4-dev libpoppler-glib-dev
 ```sh
 sudo apt-get install libpoppler-glib-dev
 opam install dune lablgtk3 cairo2
+opam install ./puppler
+```
+
+The `puppler/` directory is a local opam package for the small Poppler GLib
+binding used by the OCaml implementation. It is intentionally kept in this
+repository instead of being published to the public opam repository. After it is
+installed or pinned locally, `pusagi_ocaml/dune` can depend on it as:
+
+```lisp
+(libraries lablgtk3 cairo2 unix puppler)
 ```
 
 ### C++ / Qt6 (`pusagi_qt6/`)

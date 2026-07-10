@@ -1,0 +1,19 @@
+(rule
+ (targets c_flags.sexp)
+ (deps gen_flags.sh)
+ (action (with-stdout-to %{targets} (run sh %{dep:gen_flags.sh} cflags))))
+
+(rule
+ (targets c_library_flags.sexp)
+ (deps gen_flags.sh)
+ (action (with-stdout-to %{targets} (run sh %{dep:gen_flags.sh} lflags))))
+
+(library
+ (name puppler)
+ (public_name puppler)
+ (libraries cairo2)
+ (foreign_stubs
+  (language c)
+  (names poppler_stubs)
+  (flags (:include c_flags.sexp)))
+ (c_library_flags (:include c_library_flags.sexp)))

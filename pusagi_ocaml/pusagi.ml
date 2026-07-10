@@ -1,22 +1,7 @@
-external poppler_document_new_from_file : string -> string -> 'doc
-  = "caml_poppler_document_new_from_file"
-
-external poppler_document_get_n_pages : 'doc -> int
-  = "caml_poppler_document_get_n_pages"
-
-external poppler_document_get_page : 'doc -> int -> 'page
-  = "caml_poppler_document_get_page"
-
-external poppler_page_get_size : 'page -> float * float
-  = "caml_poppler_page_get_size"
-
-external poppler_page_render : 'page -> Cairo.context -> unit
-  = "caml_poppler_page_render"
-
 let default_total_time_sec = 300.0
 
-type 'doc state = {
-  doc : 'doc;
+type state = {
+  doc : Puppler.document;
   total_pages : int;
   current_page : int ref;
   presentation_running : bool ref;
@@ -60,8 +45,8 @@ let draw_progress_text cr text progress width y =
   Cairo.restore cr
 
 let draw cr state width height =
-  let page = poppler_document_get_page state.doc !(state.current_page) in
-  let (pw, ph) = poppler_page_get_size page in
+  let page = Puppler.document_get_page state.doc !(state.current_page) in
+  let (pw, ph) = Puppler.page_get_size page in
   let fw = float_of_int width in
   let fh = float_of_int height in
   let scale = Float.min (fw /. pw) (fh /. ph) in
@@ -73,7 +58,7 @@ let draw cr state width height =
   Cairo.fill cr;
   Cairo.translate cr ox oy;
   Cairo.scale cr scale scale;
-  poppler_page_render page cr;
+  Puppler.page_render page cr;
   Cairo.restore cr;
   let page_progress =
     if state.total_pages > 1
@@ -152,11 +137,11 @@ let () =
       "file://" ^ filename
   in
   let doc =
-    try poppler_document_new_from_file uri ""
+    try Puppler.document_new_from_file uri ""
     with Failure msg ->
       Printf.eprintf "Failed to load PDF: %s\n" msg; exit 1
   in
-  let n_pages = poppler_document_get_n_pages doc in
+  let n_pages = Puppler.document_get_n_pages doc in
   let state = {
     doc;
     total_pages = n_pages;

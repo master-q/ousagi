@@ -1,15 +1,3 @@
 (executable
  (name pusagi)
- (libraries lablgtk3 cairo2 unix)
- (foreign_stubs
-  (language c)
-  (names poppler_stubs)
-  (flags (-I/usr/include/poppler/glib
-          -I/usr/include/glib-2.0
-          -I/usr/lib/x86_64-linux-gnu/glib-2.0/include
-          -I/usr/include/cairo
-          -I/usr/include/poppler)))
- (link_flags (-cclib -lpoppler-glib
-              -cclib -lgobject-2.0
-              -cclib -lglib-2.0
-              -cclib -lcairo)))
+ (libraries lablgtk3 cairo2 unix puppler))

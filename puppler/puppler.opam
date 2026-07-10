@@ -1,0 +1,35 @@
+opam-version: "2.0"
+synopsis: "Small local OCaml bindings for Poppler used by Pusagi"
+description:
+  "Small local OCaml bindings for the Poppler GLib PDF rendering API used by Pusagi."
+maintainer: ["local"]
+authors: ["local"]
+homepage: "https://github.com/local/pusagi"
+bug-reports: "https://github.com/local/pusagi/issues"
+license: "MIT"
+depends: [
+  "ocaml"
+  "dune" {>= "3.0"}
+  "cairo2"
+  "conf-pkg-config"
+  "odoc" {with-doc}
+]
+depexts: [
+  ["libpoppler-glib-dev"] {os-family = "debian"}
+  ["poppler-glib"] {os-family = "arch"}
+  ["poppler-glib"] {os = "macos" & os-distribution = "homebrew"}
+]
+build: [
+  ["dune" "subst"] {dev}
+  [
+    "dune"
+    "build"
+    "-p"
+    name
+    "-j"
+    jobs
+    "@install"
+    "@runtest" {with-test}
+    "@doc" {with-doc}
+  ]
+]
