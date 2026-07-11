@@ -158,7 +158,7 @@ Pusagi was inspired by [Rabbit](https://rabbit-shocker.org/ja/), a presentation
 tool for Ruby programmers that features a distinctive rabbit-and-turtle progress
 display.
 
-The implementations were written with assistance from Claude Code.
+The implementations were written with assistance from Claude Code and Codex.
 
 ## License
 
