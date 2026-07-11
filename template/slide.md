@@ -14,7 +14,7 @@ theme: metropolis
    - carrot
    - broccoli
 
-![](img/takibi-icon-v3.png){ height=30% }
+![](img/takibi-icon-v3.jpg){ height=50% }
 
 ## Page 2 - Mathematical formula
 
