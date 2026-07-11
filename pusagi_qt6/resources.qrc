@@ -1,8 +1,5 @@
 <!DOCTYPE RCC>
 <RCC version="1.0">
-    <qresource prefix="/">
-        <file>pusagi.qml</file>
-    </qresource>
     <qresource prefix="/template">
         <file alias="Makefile">../template/Makefile</file>
         <file alias="header.tex">../template/header.tex</file>

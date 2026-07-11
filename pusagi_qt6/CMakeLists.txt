@@ -6,7 +6,9 @@ set(CMAKE_AUTOMOC ON)
 
 find_package(Qt6 REQUIRED COMPONENTS Core Gui Widgets Pdf)
 
-qt_add_executable(pusagi pusagi.cpp)
+qt6_add_resources(APP_RESOURCES resources.qrc)
+
+qt_add_executable(pusagi pusagi.cpp ${APP_RESOURCES})
 
 target_link_libraries(pusagi PRIVATE
     Qt6::Core

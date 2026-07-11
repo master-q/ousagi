@@ -7,14 +7,18 @@
 #include <QMutex>
 #include <QMutexLocker>
 #include <QUrl>
+#include <QDir>
+#include <QFile>
 #include <QFileInfo>
 #include <cstdio>
 #include <cstdlib>
 #include <cmath>
 
 static void printHelp(const char *prog) {
-    printf("Usage: %s [OPTIONS] PDF_FILE\n\n", prog);
+    printf("Usage: %s [OPTIONS] PDF_FILE\n", prog);
+    printf("       %s -n DIRECTORY\n\n", prog);
     printf("Options:\n");
+    printf("  -n DIRECTORY    Copy template contents into DIRECTORY and exit\n");
     printf("  -t MINUTES      Set presentation duration in minutes (default: 5)\n");
     printf("  -h, --help      Show this help message and exit\n\n");
     printf("Keys:\n");
@@ -22,6 +26,51 @@ static void printHelp(const char *prog) {
     printf("  Left / Right    Move to the previous or next page\n");
     printf("  Home / End      Move to the first or last page\n");
     printf("  Esc             Quit\n");
+}
+
+static bool copyTemplateFile(const QString &resourcePath, const QString &destinationPath) {
+    QFile source(resourcePath);
+    if (!source.open(QIODevice::ReadOnly)) {
+        fprintf(stderr, "Error: failed to read template file: %s\n", qPrintable(resourcePath));
+        return false;
+    }
+
+    QFileInfo info(destinationPath);
+    if (!QDir().mkpath(info.path())) {
+        fprintf(stderr, "Error: failed to create directory: %s\n", qPrintable(info.path()));
+        return false;
+    }
+
+    QFile destination(destinationPath);
+    if (!destination.open(QIODevice::WriteOnly | QIODevice::Truncate)) {
+        fprintf(stderr, "Error: failed to write template file: %s\n", qPrintable(destinationPath));
+        return false;
+    }
+
+    destination.write(source.readAll());
+    return true;
+}
+
+static int createFromTemplate(const QString &directoryName) {
+    if (!QDir().mkpath(directoryName)) {
+        fprintf(stderr, "Error: failed to create directory: %s\n", qPrintable(directoryName));
+        return 1;
+    }
+
+    const QList<QString> files = {
+        "Makefile",
+        "header.tex",
+        "img/takibi-icon-v3.jpg",
+        "slide.md",
+    };
+
+    for (const QString &file : files) {
+        if (!copyTemplateFile(":/template/" + file, QDir(directoryName).filePath(file)))
+            return 1;
+    }
+
+    printf("Created %s from template\n", qPrintable(directoryName));
+    return 0;
 }
 
 // Renders PDF pages into QImage on demand.
@@ -72,9 +121,8 @@ public:
 };
 
 int main(int argc, char *argv[]) {
-    QGuiApplication app(argc, argv);
-
     double  totalTimeSec = 300.0;
+    QString newDirectory;
     QString pdfPath;
 
     for (int i = 1; i < argc; ++i) {
@@ -95,15 +143,33 @@ int main(int argc, char *argv[]) {
                 return 1;
             }
             totalTimeSec = m * 60.0;
+        } else if (arg == "-n") {
+            if (i + 1 >= argc) {
+                fprintf(stderr, "Error: -n requires a directory name\n");
+                printHelp(argv[0]);
+                return 1;
+            }
+            newDirectory = argv[++i];
         } else {
             pdfPath = arg;
         }
+    }
+
+    if (!newDirectory.isEmpty()) {
+        if (!pdfPath.isEmpty()) {
+            fprintf(stderr, "Error: -n cannot be used with a PDF file\n");
+            printHelp(argv[0]);
+            return 1;
+        }
+        return createFromTemplate(newDirectory);
     }
 
     if (pdfPath.isEmpty()) {
         printHelp(argv[0]);
         return 0;
     }
+
+    QGuiApplication app(argc, argv);
 
     auto *provider = new PdfImageProvider(pdfPath);
     int   pageCount = provider->pageCount();

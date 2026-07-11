@@ -1,5 +1,12 @@
 .PHONY: all build clean run install check-deps
 
+TEMPLATE_DATA = app/TemplateData.hs
+TEMPLATE_FILES = \
+	../template/Makefile \
+	../template/header.tex \
+	../template/img/takibi-icon-v3.jpg \
+	../template/slide.md
+
 BINUTILS_OK := $(shell which ld 2>/dev/null)
 GTK3_OK     := $(shell pkg-config --exists gtk+-3.0 2>/dev/null && echo yes)
 POPPLER_OK  := $(shell pkg-config --exists poppler-glib 2>/dev/null && echo yes)
@@ -17,13 +24,17 @@ ifndef POPPLER_OK
 	$(error "Poppler not found. Install: sudo apt-get install -y libpoppler-glib-dev")
 endif
 
-build:
+build: $(TEMPLATE_DATA)
 	cabal build
+	rm -f pusagi
 	cp $$(cabal list-bin pusagi) pusagi
+
+$(TEMPLATE_DATA): ../scripts/generate_template_modules.py $(TEMPLATE_FILES)
+	python3 ../scripts/generate_template_modules.py haskell $@ ../template
 
 clean:
 	cabal clean
-	rm -f pusagi
+	rm -f pusagi $(TEMPLATE_DATA)
 
 run:
 	cabal run pusagi -- $(PDF)

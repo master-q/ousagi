@@ -7,10 +7,13 @@ import Data.IORef
 import System.Environment (getArgs, getProgName)
 import System.Exit (exitSuccess, exitFailure)
 import System.IO (hPutStrLn, stderr)
-import System.FilePath (isRelative)
-import System.Directory (getCurrentDirectory)
+import System.FilePath (isRelative, takeDirectory, (</>))
+import System.Directory (createDirectoryIfMissing, getCurrentDirectory)
 
 import qualified Data.Text as T
+import qualified Data.ByteString as BS
+
+import qualified TemplateData
 
 import qualified GI.Gtk as Gtk
 import qualified GI.Gdk as Gdk
@@ -167,8 +170,10 @@ drawOverlay st ctx width height = do
 printHelp :: String -> IO ()
 printHelp prog = do
   putStrLn $ "Usage: " ++ prog ++ " [OPTIONS] PDF_FILE"
+  putStrLn $ "       " ++ prog ++ " -n DIRECTORY"
   putStrLn ""
   putStrLn "Options:"
+  putStrLn "  -n DIRECTORY    Copy template contents into DIRECTORY and exit"
   putStrLn "  -t MINUTES      Set presentation duration in minutes (default: 5)"
   putStrLn "  -h, --help      Show this help message and exit"
   putStrLn ""
@@ -186,33 +191,61 @@ parseMinutes s = case reads s of
     hPutStrLn stderr "Error: presentation minutes must be greater than 0"
     exitFailure
 
--- Parse command-line arguments
-parseArgs :: [String] -> IO (Double, Maybe String)
-parseArgs args = go args defaultTotalTimeSec Nothing
+createFromTemplate :: FilePath -> IO ()
+createFromTemplate directoryName = do
+  createDirectoryIfMissing True directoryName
+  mapM_ writeTemplateFile TemplateData.files
+  putStrLn $ "Created " ++ directoryName ++ " from template"
   where
-    go [] t f = return (t, f)
-    go ("-h":_) _ _ = do
+    writeTemplateFile (name, bytes) = do
+      let path = directoryName </> name
+      createDirectoryIfMissing True (takeDirectory path)
+      BS.writeFile path bytes
+
+-- Parse command-line arguments
+parseArgs :: [String] -> IO (Double, Maybe FilePath, Maybe FilePath)
+parseArgs args = go args defaultTotalTimeSec Nothing Nothing
+  where
+    go [] t n f = return (t, n, f)
+    go ("-h":_) _ _ _ = do
       prog <- getProgName
       printHelp prog
       exitSuccess
-    go ("--help":_) _ _ = do
+    go ("--help":_) _ _ _ = do
       prog <- getProgName
       printHelp prog
       exitSuccess
-    go ("-t":v:rest) _ f = do
+    go ("-t":v:rest) _ n f = do
       t <- parseMinutes v
-      go rest t f
-    go ("-t":_) _ _ = do
+      go rest t n f
+    go ("-t":_) _ _ _ = do
       hPutStrLn stderr "Error: -t requires a value in minutes"
       prog <- getProgName
       printHelp prog
       exitFailure
-    go (a:rest) t _ = go rest t (Just a)
+    go ("-n":v:rest) t _ f = go rest t (Just v) f
+    go ("-n":_) _ _ _ = do
+      hPutStrLn stderr "Error: -n requires a directory name"
+      prog <- getProgName
+      printHelp prog
+      exitFailure
+    go (a:rest) t n _ = go rest t n (Just a)
 
 main :: IO ()
 main = do
   args <- getArgs
-  (totalTimeSec, mFile) <- parseArgs args
+  (totalTimeSec, mNewDirectory, mFile) <- parseArgs args
+
+  case mNewDirectory of
+    Just directoryName -> do
+      case mFile of
+        Just _ -> do
+          hPutStrLn stderr "Error: -n cannot be used with a PDF file"
+          prog <- getProgName
+          printHelp prog
+          exitFailure
+        Nothing -> createFromTemplate directoryName >> exitSuccess
+    Nothing -> return ()
 
   filename <- case mFile of
     Nothing -> do

@@ -2,6 +2,8 @@
 /// Ported from Vala to Rust using GTK4 + Cairo + Poppler (via FFI)
 
 use std::cell::RefCell;
+use std::fs;
+use std::path::Path;
 use std::rc::Rc;
 use std::time::Instant;
 
@@ -138,6 +140,15 @@ impl PopplerPage {
 // ---------------------------------------------------------------------------
 
 const DEFAULT_TOTAL_TIME_SEC: f64 = 300.0;
+const TEMPLATE_FILES: &[(&str, &[u8])] = &[
+    ("Makefile", include_bytes!("../../template/Makefile")),
+    ("header.tex", include_bytes!("../../template/header.tex")),
+    (
+        "img/takibi-icon-v3.jpg",
+        include_bytes!("../../template/img/takibi-icon-v3.jpg"),
+    ),
+    ("slide.md", include_bytes!("../../template/slide.md")),
+];
 
 struct AppStateInner {
     doc: PopplerDoc,
@@ -417,8 +428,10 @@ fn build_ui(app: &Application, state: AppState) {
 
 fn print_help(prog: &str) {
     println!("Usage: {prog} [OPTIONS] PDF_FILE");
+    println!("       {prog} -n DIRECTORY");
     println!();
     println!("Options:");
+    println!("  -n DIRECTORY    Copy template contents into DIRECTORY and exit");
     println!("  -t MINUTES      Set presentation duration in minutes (default: 5)");
     println!("  -h, --help      Show this help message and exit");
     println!();
@@ -429,11 +442,29 @@ fn print_help(prog: &str) {
     println!("  Esc             Quit");
 }
 
+fn create_from_template(directory_name: &str) -> Result<(), String> {
+    let destination = Path::new(directory_name);
+
+    fs::create_dir_all(destination).map_err(|e| format!("failed to create directory: {e}"))?;
+
+    for (name, data) in TEMPLATE_FILES {
+        let path = destination.join(name);
+        if let Some(parent) = path.parent() {
+            fs::create_dir_all(parent).map_err(|e| format!("failed to create directory: {e}"))?;
+        }
+        fs::write(&path, data).map_err(|e| format!("failed to write {}: {e}", path.display()))?;
+    }
+
+    println!("Created {directory_name} from template");
+    Ok(())
+}
+
 fn main() {
     let args: Vec<String> = std::env::args().collect();
     let prog = args[0].clone();
 
     let mut total_time_sec = DEFAULT_TOTAL_TIME_SEC;
+    let mut new_directory: Option<String> = None;
     let mut pdf_path: Option<String> = None;
 
     let mut i = 1usize;
@@ -461,10 +492,31 @@ fn main() {
                 std::process::exit(1);
             }
             total_time_sec = minutes * 60.0;
+        } else if arg == "-n" {
+            i += 1;
+            if i >= args.len() {
+                eprintln!("Error: -n requires a directory name");
+                print_help(&prog);
+                std::process::exit(1);
+            }
+            new_directory = Some(args[i].clone());
         } else {
             pdf_path = Some(arg.clone());
         }
         i += 1;
+    }
+
+    if let Some(directory_name) = new_directory {
+        if pdf_path.is_some() {
+            eprintln!("Error: -n cannot be used with a PDF file");
+            print_help(&prog);
+            std::process::exit(1);
+        }
+        if let Err(e) = create_from_template(&directory_name) {
+            eprintln!("Error: failed to copy template: {e}");
+            std::process::exit(1);
+        }
+        return;
     }
 
     let pdf_path = match pdf_path {

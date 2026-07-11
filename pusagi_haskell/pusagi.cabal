@@ -7,6 +7,7 @@ build-type:         Simple
 
 executable pusagi
     main-is:          Main.hs
+    other-modules:    TemplateData
     hs-source-dirs:   app
     default-language: Haskell2010
     default-extensions: NumericUnderscores, MultiWayIf
@@ -26,6 +27,7 @@ executable pusagi
         gi-poppler,
         haskell-gi-base   >= 0.26 && < 0.27,
         text,
+        bytestring,
         transformers,
         data-default,
         filepath,

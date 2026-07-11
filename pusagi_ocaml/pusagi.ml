@@ -86,8 +86,10 @@ let draw cr state width height =
   draw_progress_text cr "\xF0\x9F\x90\x87" !(state.displayed_page_progress) width (fh -. 30.0)
 
 let print_help prog =
-  Printf.printf "Usage: %s [OPTIONS] PDF_FILE\n\n" prog;
+  Printf.printf "Usage: %s [OPTIONS] PDF_FILE\n" prog;
+  Printf.printf "       %s -n DIRECTORY\n\n" prog;
   Printf.printf "Options:\n";
+  Printf.printf "  -n DIRECTORY    Copy template contents into DIRECTORY and exit\n";
   Printf.printf "  -t MINUTES      Set presentation duration in minutes (default: 5)\n";
   Printf.printf "  -h, --help      Show this help message and exit\n\n";
   Printf.printf "Keys:\n";
@@ -104,10 +106,29 @@ let parse_minutes s =
   end;
   m *. 60.0
 
+let rec mkdir_p dir =
+  if dir = "" || dir = "." || Sys.file_exists dir then ()
+  else begin
+    mkdir_p (Filename.dirname dir);
+    Unix.mkdir dir 0o755
+  end
+
+let create_from_template directory_name =
+  mkdir_p directory_name;
+  List.iter (fun (name, contents) ->
+    let path = Filename.concat directory_name name in
+    mkdir_p (Filename.dirname path);
+    let oc = open_out_bin path in
+    output_string oc contents;
+    close_out oc
+  ) Template_data.files;
+  Printf.printf "Created %s from template\n" directory_name
+
 let () =
   let argv = Sys.argv in
   let argc = Array.length argv in
   let total_time_sec = ref default_total_time_sec in
+  let new_directory = ref None in
   let pdf_file = ref None in
   let i = ref 1 in
   while !i < argc do
@@ -121,10 +142,29 @@ let () =
       end;
       incr i;
       total_time_sec := parse_minutes argv.(!i)
+    end else if arg = "-n" then begin
+      if !i + 1 >= argc then begin
+        Printf.eprintf "Error: -n requires a directory name\n";
+        print_help argv.(0); exit 1
+      end;
+      incr i;
+      new_directory := Some argv.(!i)
     end else
       pdf_file := Some arg;
     incr i
   done;
+  begin match !new_directory with
+  | Some directory_name ->
+      begin match !pdf_file with
+      | Some _ ->
+          Printf.eprintf "Error: -n cannot be used with a PDF file\n";
+          print_help argv.(0); exit 1
+      | None ->
+          create_from_template directory_name;
+          exit 0
+      end
+  | None -> ()
+  end;
   let filename = match !pdf_file with
     | None -> print_help argv.(0); exit 0
     | Some f -> f
