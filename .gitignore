@@ -3,4 +3,5 @@ build/
 dist-newstyle/
 target/
 pusagi
+pusagi_vala/pusagi-resources.c
 *.pdf

@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<gresources>
+  <gresource prefix="/com/metasepi-design/pusagi">
+    <file>template/Makefile</file>
+    <file>template/header.tex</file>
+    <file>template/img/takibi-icon-v3.jpg</file>
+    <file>template/slide.md</file>
+  </gresource>
+</gresources>

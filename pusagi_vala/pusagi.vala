@@ -251,6 +251,7 @@ int main(
     string[] args
     ) {
     double total_time_sec = PusagiWindow.DEFAULT_TOTAL_TIME_SEC;
+    string? new_directory = null;
     string[] app_args = {};
 
     app_args += args[0];
@@ -275,10 +276,33 @@ int main(
 
             total_time_sec = parse_presentation_minutes(args[++i]);
         }
+        else if (arg == "-n")
+        {
+            if (i + 1 >= args.length)
+            {
+                stderr.printf("Error: %s requires a directory name\n", arg);
+                print_help(args[0]);
+                return 1;
+            }
+
+            new_directory = args[++i];
+        }
         else
         {
             app_args += arg;
         }
+    }
+
+    if (new_directory != null)
+    {
+        if (app_args.length > 1)
+        {
+            stderr.printf("Error: -n cannot be used with a PDF file\n");
+            print_help(args[0]);
+            return 1;
+        }
+
+        return create_from_template(new_directory);
     }
 
     if (app_args.length == 1)
@@ -292,8 +316,10 @@ int main(
 
 void print_help(string program_name) {
     stdout.printf("Usage: %s [OPTIONS] PDF_FILE\n", program_name);
+    stdout.printf("       %s -n DIRECTORY\n", program_name);
     stdout.printf("\n");
     stdout.printf("Options:\n");
+    stdout.printf("  -n DIRECTORY    Copy template contents into DIRECTORY and exit\n");
     stdout.printf("  -t MINUTES      Set presentation duration in minutes (default: 5)\n");
     stdout.printf("  -h, --help      Show this help message and exit\n");
     stdout.printf("\n");
@@ -314,4 +340,70 @@ double parse_presentation_minutes(string text) {
     }
 
     return minutes * 60.0;
+}
+
+int create_from_template(string directory_name) {
+    File destination = File.new_for_path(directory_name);
+
+    try {
+        create_directory_if_needed(destination);
+        copy_resource_directory_contents(
+            "/com/metasepi-design/pusagi/template/",
+            destination
+            );
+    }
+    catch (GLib.Error e) {
+        stderr.printf("Error: failed to copy template: %s\n", e.message);
+        return 1;
+    }
+
+    stdout.printf("Created %s from template\n", directory_name);
+    return 0;
+}
+
+void create_directory_if_needed(File directory) throws GLib.Error {
+    try {
+        directory.make_directory_with_parents();
+    }
+    catch (IOError.EXISTS e) {
+        FileInfo info = directory.query_info(
+            FileAttribute.STANDARD_TYPE,
+            FileQueryInfoFlags.NONE
+            );
+
+        if (info.get_file_type() != FileType.DIRECTORY)
+        {
+            throw e;
+        }
+    }
+}
+
+void copy_resource_directory_contents(string resource_path, File destination) throws GLib.Error {
+    string[] children = resources_enumerate_children(
+        resource_path,
+        ResourceLookupFlags.NONE
+        );
+
+    foreach (string child in children)
+    {
+        string child_resource_path = resource_path + child;
+        string child_name = child.has_suffix("/") ? child.substring(0, child.length - 1) : child;
+        File child_destination = destination.get_child(child_name);
+
+        if (child.has_suffix("/"))
+        {
+            create_directory_if_needed(child_destination);
+            copy_resource_directory_contents(child_resource_path, child_destination);
+        }
+        else
+        {
+            Bytes data = resources_lookup_data(
+                child_resource_path,
+                ResourceLookupFlags.NONE
+                );
+            unowned uint8[] bytes = data.get_data();
+
+            FileUtils.set_data(child_destination.get_path(), bytes);
+        }
+    }
 }

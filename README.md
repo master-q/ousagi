@@ -128,11 +128,13 @@ Examples:
 ```sh
 ./pusagi slides.pdf
 ./pusagi -t 15 slides.pdf
+./pusagi -n my-slides
 ```
 
 Options:
 
 ```
+  -n DIRECTORY    Copy template contents into DIRECTORY and exit
   -t MINUTES      Set presentation duration in minutes (default: 5)
   -h, --help      Show help and exit
 ```
